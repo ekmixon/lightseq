@@ -48,15 +48,13 @@ class LSFSAdam(FairseqOptimizer):
             and fused_adam_cls is not None
             and torch.cuda.is_available()
         )
-        if getattr(args, "tpu", False):
+        if getattr(args, "tpu", False) or not use_fused_adam:
             # on TPUs we use the Adam defined here, since it
             # automatically casts gradients to FP32
             self._optimizer = Adam(params, **self.optimizer_config)
-        elif use_fused_adam:
+        else:
             logger.info("using LightSeq Adam")
             self._optimizer = fused_adam_cls(params, **self.optimizer_config)
-        else:
-            self._optimizer = Adam(params, **self.optimizer_config)
 
     @property
     def optimizer_config(self):
@@ -141,10 +139,7 @@ class Adam(torch.optim.Optimizer):
             closure (callable, optional): A closure that reevaluates the model
                 and returns the loss.
         """
-        loss = None
-        if closure is not None:
-            loss = closure()
-
+        loss = closure() if closure is not None else None
         for group in self.param_groups:
             for p in group["params"]:
                 if p.grad is None:

@@ -27,9 +27,11 @@ def torch_reduce_sum(
     logging outputs are scalars and can be summed. Note that
     *logging_outputs* cannot contain any nested dicts/lists.
     """
-    data = {}
-    for i, stat in enumerate(extra_stats_to_sum):
-        data["extra_stats_" + str(i)] = stat
+    data = {
+        f"extra_stats_{str(i)}": stat
+        for i, stat in enumerate(extra_stats_to_sum)
+    }
+
     if len(logging_outputs) > 0:
         log_keys = list(logging_outputs[0].keys())
         for k in log_keys:
@@ -38,17 +40,18 @@ def torch_reduce_sum(
             else:
                 v = logging_outputs[0][k]
                 v = torch.zeros_like(v) if torch.is_tensor(v) else 0
-            data["logging_outputs_" + k] = v
+            data[f"logging_outputs_{k}"] = v
     else:
         log_keys = None
 
     data = distributed_utils.all_reduce_dict(data, device=device, group=None)
 
     extra_stats_to_sum = [
-        data["extra_stats_" + str(i)] for i in range(len(extra_stats_to_sum))
+        data[f"extra_stats_{str(i)}"] for i in range(len(extra_stats_to_sum))
     ]
+
     if log_keys is not None:
-        logging_outputs = [{k: data["logging_outputs_" + k] for k in log_keys}]
+        logging_outputs = [{k: data[f"logging_outputs_{k}"] for k in log_keys}]
     else:
         logging_outputs = []
     return logging_outputs, extra_stats_to_sum
@@ -176,11 +179,7 @@ class DsFairseqTrainer(object):
                         )
                         logging_output = self.reduce_log(logging_outputs, sample_size)
                 log_dist(
-                    "Valid on step: {}, dataset: {}. {}".format(
-                        self.model.global_steps,
-                        subset,
-                        view_log(agg.get_smoothed_values()),
-                    ),
+                    f"Valid on step: {self.model.global_steps}, dataset: {subset}. {view_log(agg.get_smoothed_values())}",
                     ranks=[0],
                 )
 

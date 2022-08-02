@@ -17,7 +17,7 @@ class LSHFTransformerEncoderLayer(LSTransformerEncoderLayer):
 
 
 def gen_bert_config(training_args, config):
-    bert_config = LSTransformerEncoderLayer.get_config(
+    return LSTransformerEncoderLayer.get_config(
         max_batch_tokens=4096,
         max_seq_len=config.max_position_embeddings,
         hidden_size=config.hidden_size,
@@ -31,15 +31,11 @@ def gen_bert_config(training_args, config):
         local_rank=training_args.local_rank,
         activation_fn="gelu",
     )
-    return bert_config
 
 
 def get_hf_bert_enc_layer_params(layer):
-    init_ws = []
-    init_bs = []
-
-    init_ws.append(layer.attention.self.query.weight.detach().clone())
-    init_bs.append(layer.attention.self.query.bias.detach().clone())
+    init_ws = [layer.attention.self.query.weight.detach().clone()]
+    init_bs = [layer.attention.self.query.bias.detach().clone()]
     init_ws.append(layer.attention.self.key.weight.detach().clone())
     init_bs.append(layer.attention.self.key.bias.detach().clone())
     init_ws.append(layer.attention.self.value.weight.detach().clone())

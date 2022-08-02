@@ -21,7 +21,7 @@ def state_dict(module, destination=None, prefix="", keep_vars=False):
 
 def check_config(config):
     if config.hidden_size % config.nhead != 0:
-        raise Exception(f"hidden_size % nhead != 0")
+        raise Exception("hidden_size % nhead != 0")
 
     factor = 8 if config.fp16 else 4
     upbound = factor * 1024

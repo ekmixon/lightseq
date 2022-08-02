@@ -186,10 +186,14 @@ def test_launch_attn_softmax():
     def baseline():
         f_inp = inp.clone().to(torch.float32)
         f_mask = mask.to(torch.float32)
-        if not is_dec_self_attn_infer:
-            res = functional.softmax(f_inp + f_mask, dim=-1, dtype=torch.float32)
-        else:
-            res = functional.softmax(f_inp, dim=-1, dtype=torch.float32)
+        res = (
+            functional.softmax(f_inp, dim=-1, dtype=torch.float32)
+            if is_dec_self_attn_infer
+            else functional.softmax(
+                f_inp + f_mask, dim=-1, dtype=torch.float32
+            )
+        )
+
         return kt.norm_res_list(
             [
                 res,

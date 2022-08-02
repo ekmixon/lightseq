@@ -5,11 +5,7 @@ from lightseq.training import LSTransformerEncoderLayer, LSTransformerDecoderLay
 
 
 def gather_token_embedding(tensor_names, state_dict, tn_pattern, scale=True):
-    target_tn = []
-    for tn in tensor_names:
-        if tn_pattern in tn.split("."):
-            target_tn.append(tn)
-            continue
+    target_tn = [tn for tn in tensor_names if tn_pattern in tn.split(".")]
     target_tensor = [state_dict[name] for name in target_tn]
     target_tensor = np.concatenate(target_tensor, axis=0)
     if scale:
@@ -42,12 +38,10 @@ def apply_rule(proto_name, ckpt_rule, tensor_names, state_dict):
         ele for ele in ckpt_rule.split("&&") if not ele.startswith("expression_")
     ]
 
-    assert (len(ckpt_rule) > 0 and len(expression) < 2) or (
-        len(ckpt_rule) == 0 and len(expression) > 0
-    )
+    assert ckpt_rule and len(expression) < 2 or not ckpt_rule and expression
 
     if len(expression) < 2:
-        expression = "" if not expression else expression[0].split("_")[1]
+        expression = expression[0].split("_")[1] if expression else ""
     else:
         expression = [exp.split("_")[1] for exp in expression]
 
@@ -69,17 +63,14 @@ def apply_rule(proto_name, ckpt_rule, tensor_names, state_dict):
         exec("tt['save'] = [%s]" % ",".join(expression))
 
     target_tensor = np.concatenate(tt["save"], axis=-1)
-    print(
-        "%s -> %s, convert finished!"
-        % (target_tn if target_tn else "created", proto_name)
-    )
+    print(f'{target_tn or "created"} -> {proto_name}, convert finished!')
     return target_tensor
 
 
 def fill_pb_layer(tensor_names, state_dict, layer, mapping_dict):
     for proto_name, ckpt_rule in mapping_dict.items():
         target_tensor = apply_rule(proto_name, ckpt_rule, tensor_names, state_dict)
-        exec("layer.%s[:]=target_tensor.flatten().tolist()" % proto_name)
+        exec(f"layer.{proto_name}[:]=target_tensor.flatten().tolist()")
 
 
 def fill_hdf5_layer(
@@ -107,14 +98,11 @@ def fill_encdec_weight(
             if s.isdigit():
                 tensor_names.setdefault(int(s), []).append(name)
                 break
-    assert len(tensor_names) > 0
+    assert tensor_names
 
     for layer_id in sorted(tensor_names.keys()):
         if save_pb:
-            if is_encoder:
-                layer = file.encoder_stack.add()
-            else:
-                layer = file.decoder_stack.add()
+            layer = file.encoder_stack.add() if is_encoder else file.decoder_stack.add()
             fill_pb_layer(
                 tensor_names[layer_id],
                 state_dict,
@@ -147,7 +135,7 @@ def fill_encdec_weight(
                 tensor_names[0],
                 state_dict,
                 file,
-                f"trg_embedding/",
+                "trg_embedding/",
                 enc_out_mapping_dict,
             )
 
@@ -172,9 +160,9 @@ def export_ls_embedding(file, state_dict, max_length, is_encoder, save_pb=True):
                 "trg_embedding/token_embedding", data=emb_list, dtype="f4"
             )
     print(
-        "%s -> %s_embedding.token_embedding, convert finished!"
-        % (target_tn, "src" if is_encoder else "trg")
+        f'{target_tn} -> {"src" if is_encoder else "trg"}_embedding.token_embedding, convert finished!'
     )
+
 
     pos_emb = get_pos_embedding(max_length, emb.shape[-1])
     pos_emb_list = pos_emb.flatten().tolist()
@@ -185,17 +173,15 @@ def export_ls_embedding(file, state_dict, max_length, is_encoder, save_pb=True):
             file.create_dataset(
                 "src_embedding/position_embedding", data=pos_emb_list, dtype="f4"
             )
+    elif save_pb:
+        file.trg_embedding.position_embedding[:] = pos_emb_list
     else:
-        if save_pb:
-            file.trg_embedding.position_embedding[:] = pos_emb_list
-        else:
-            file.create_dataset(
-                "trg_embedding/position_embedding", data=pos_emb_list, dtype="f4"
-            )
+        file.create_dataset(
+            "trg_embedding/position_embedding", data=pos_emb_list, dtype="f4"
+        )
     target_tn = [tn.replace("embeddings", "pos_embeddings") for tn in target_tn]
     print(
-        "%s -> %s_embedding.position_embedding, convert finished!"
-        % (target_tn, "src" if is_encoder else "trg")
+        f'{target_tn} -> {"src" if is_encoder else "trg"}_embedding.position_embedding, convert finished!'
     )
 
 

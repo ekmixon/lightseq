@@ -27,8 +27,9 @@ def installed_cuda_version():
     ), "CUDA_HOME does not exist, unable to compile CUDA op(s)"
     # Ensure there is not a cuda version mismatch between torch and nvcc compiler
     output = subprocess.check_output(
-        [cuda_home + "/bin/nvcc", "-V"], universal_newlines=True
+        [f"{cuda_home}/bin/nvcc", "-V"], universal_newlines=True
     )
+
     output_split = output.split()
     release_idx = output_split.index("release")
     release = output_split[release_idx + 1].replace(",", "").split(".")
@@ -147,23 +148,21 @@ class OpBuilder(ABC):
         return requirements
 
     def command_exists(self, cmd):
-        if "|" in cmd:
-            cmds = cmd.split("|")
-        else:
-            cmds = [cmd]
+        cmds = cmd.split("|") if "|" in cmd else [cmd]
         valid = False
         for cmd in cmds:
             result = subprocess.Popen(f"type {cmd}", stdout=subprocess.PIPE, shell=True)
             valid = valid or result.wait() == 0
 
-        if not valid and len(cmds) > 1:
-            print(
-                f"{WARNING} {self.name} requires one of the following commands '{cmds}', but it does not exist!"
-            )
-        elif not valid and len(cmds) == 1:
-            print(
-                f"{WARNING} {self.name} requires the '{cmd}' command, but it does not exist!"
-            )
+        if not valid:
+            if len(cmds) > 1:
+                print(
+                    f"{WARNING} {self.name} requires one of the following commands '{cmds}', but it does not exist!"
+                )
+            elif len(cmds) == 1:
+                print(
+                    f"{WARNING} {self.name} requires the '{cmd}' command, but it does not exist!"
+                )
         return valid
 
     def warning(self, msg):
@@ -284,9 +283,8 @@ class CUDAOpBuilder(OpBuilder):
                         f"{WARNING} env var `TORCH_CUDA_ARCH_LIST={cross_compile_archs_env}` overrides `cross_compile_archs={cross_compile_archs}`"
                     )
                 cross_compile_archs = cross_compile_archs_env.replace(" ", ";")
-            else:
-                if cross_compile_archs is None:
-                    cross_compile_archs = get_default_compute_capatabilities()
+            elif cross_compile_archs is None:
+                cross_compile_archs = get_default_compute_capatabilities()
             ccs = cross_compile_archs.split(";")
 
         args = []

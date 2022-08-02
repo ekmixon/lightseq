@@ -164,10 +164,13 @@ for _ in range(num_layers):
     fairseq_dec_layer_list.append(fairseq_dec_layer)
     _initial_dec_weights_list.append(initial_dec_weights)
     _initial_dec_biases_list.append(initial_dec_biases)
-    _initial_encdec_attn_kvw_list.append(initial_dec_weights[6])
-    _initial_encdec_attn_kvw_list.append(initial_dec_weights[7])
-    _initial_encdec_attn_kvb_list.append(initial_dec_biases[6])
-    _initial_encdec_attn_kvb_list.append(initial_dec_biases[7])
+    _initial_encdec_attn_kvw_list.extend(
+        (initial_dec_weights[6], initial_dec_weights[7])
+    )
+
+    _initial_encdec_attn_kvb_list.extend(
+        (initial_dec_biases[6], initial_dec_biases[7])
+    )
 
 _initial_encdec_attn_kvw = torch.cat(_initial_encdec_attn_kvw_list, dim=0)
 _initial_encdec_attn_kvb = torch.cat(_initial_encdec_attn_kvb_list, dim=0)
@@ -281,7 +284,7 @@ def test_encoder_layer_backward():
     batch_size, seq_len = kt.bs_sl()
     print(f"(batch_size, seq_len): ({batch_size}, {seq_len})")
     hidden_size = 1024
-    shs = hidden_size * hidden_size
+    shs = hidden_size**2
 
     hidden_states = kt.rand((batch_size, seq_len, hidden_size))
     self_attn_padding_mask = kt.attn_mask(batch_size, seq_len, dtype=torch.bool)
@@ -406,7 +409,7 @@ def test_bert_encoder_layer_backward():
     batch_size, seq_len = kt.bs_sl()
     print(f"(batch_size, seq_len): ({batch_size}, {seq_len})")
     hidden_size = 1024
-    shs = hidden_size * hidden_size
+    shs = hidden_size**2
 
     hidden_states = kt.rand((batch_size, seq_len, hidden_size))
     self_attn_padding_mask = kt.attn_mask(batch_size, seq_len, dtype=torch.bool)
@@ -547,7 +550,7 @@ def test_decoder_layer_backward():
         f"(batch_size, enc_seq_len, dec_seq_len): ({batch_size}, {enc_seq_len}, {dec_seq_len})"
     )
     hidden_size = 1024
-    shs = hidden_size * hidden_size
+    shs = hidden_size**2
     hidden_states = kt.rand((batch_size, dec_seq_len, hidden_size))
     encoder_out = kt.rand((enc_seq_len, batch_size, hidden_size))
     incremental_state = None

@@ -70,8 +70,7 @@ class LSTransformer(nn.Module):
             fp16=config.fp16,
             local_rank=config.local_rank,
         )
-        emb = LSTransformerEmbeddingLayer(emb_config)
-        return emb
+        return LSTransformerEmbeddingLayer(emb_config)
 
     def build_encoder(self, config, embed_tokens):
         return LSTransformerEncoder(config, embed_tokens)
@@ -81,8 +80,7 @@ class LSTransformer(nn.Module):
 
     def forward(self, src_tokens, trg_tokens):
         encoder_out, encoder_padding_mask = self.encoder(src_tokens)
-        decoder_out = self.decoder(trg_tokens, encoder_out, encoder_padding_mask)
-        return decoder_out
+        return self.decoder(trg_tokens, encoder_out, encoder_padding_mask)
 
 
 class LSTransformerEncoder(nn.Module):
@@ -119,8 +117,7 @@ class LSTransformerEncoder(nn.Module):
         return LSTransformerEncoderLayer(enc_config)
 
     def forward_embedding(self, src_tokens):
-        x = self.embed_tokens(src_tokens)
-        return x
+        return self.embed_tokens(src_tokens)
 
     def forward(self, src_tokens):
         x = self.forward_embedding(src_tokens)
@@ -182,8 +179,7 @@ class LSTransformerDecoder(nn.Module):
         if cache is not None:
             step = trg_tokens.size(1) - 1
             trg_tokens = trg_tokens[:, -1:]
-        x = self.embed_tokens(trg_tokens, step)
-        return x
+        return self.embed_tokens(trg_tokens, step)
 
     def forward(self, trg_tokens, encoder_out, encoder_padding_mask, cache=None):
         x = self.forward_embedding(trg_tokens, cache)

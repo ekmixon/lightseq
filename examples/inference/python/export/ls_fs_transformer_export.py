@@ -55,10 +55,7 @@ def export_ls_fs_transformer(ckpt_path, out_path, save_pb=True):
     args = ckpt_file["args"]
     state_dict = ckpt_file["model"]
 
-    if save_pb:
-        file = Transformer()
-    else:
-        file = h5py.File(out_path, "w")
+    file = Transformer() if save_pb else h5py.File(out_path, "w")
     encoder_state_dict, decoder_state_dict = _extract_weight(state_dict)
     export_ls_embedding(file, encoder_state_dict, 1024, True, save_pb)
     export_ls_embedding(file, decoder_state_dict, 1024, False, save_pb)

@@ -61,8 +61,7 @@ class LightseqBertClassification:
         last_hidden_states = self.ls_bert.infer(inputs, attn_mask)
         last_hidden_states = torch.Tensor(last_hidden_states).float()
         pooled_output = self.pooler(last_hidden_states.to("cuda:0"))
-        logits = self.classifier(pooled_output)
-        return logits
+        return self.classifier(pooled_output)
 
 
 def main():

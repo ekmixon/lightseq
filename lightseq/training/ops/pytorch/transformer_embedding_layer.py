@@ -11,7 +11,7 @@ from lightseq.training.ops.pytorch.util import state_dict, get_pos_embedding
 
 
 transformer_cuda_module = None
-_all_layer_grads = dict()
+_all_layer_grads = {}
 
 
 class LSTransformerEmbeddingFunc(Function):

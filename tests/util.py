@@ -50,15 +50,11 @@ class TestDecorator(object):
     def hidden_dim(self):
         upbound = 1024 // self.nhead
         head_dim = random.choice(range(1, upbound + 1))
-        hs = head_dim * self.nhead * self.io_factor
-        return hs
+        return head_dim * self.nhead * self.io_factor
 
     @property
     def io_factor(self):
-        if self.dtype == torch.float32:
-            return 4
-        else:
-            return 8
+        return 4 if self.dtype == torch.float32 else 8
 
     def move(self, data):
         return data.to(self.device, dtype=self.dtype)
@@ -151,7 +147,7 @@ class TestDecorator(object):
         def core(func):
             res = func()  # warmup for GPU
             self.assert_allclose(res, res, rtol, atol)
-            timing = list()
+            timing = []
             for i in range(nrepeat):
                 torch.cuda.synchronize(device=self.device)
                 begin = time.time()
@@ -192,13 +188,13 @@ class TestDecorator(object):
 
 
 def flat_dim(idxs, dims):
-    assert len(idxs) == len(dims) or len(idxs) == len(dims) + 1
-    base = 1
+    assert len(idxs) in [len(dims), len(dims) + 1]
     res = 0
     dims = dims[::-1]
     idxs = idxs[::-1]
     if len(idxs) == len(dims) + 1:
         dims.append(0)
+        base = 1
         for idx, dim in zip(idxs, dims):
             assert idx < dim
             res += idx * base
@@ -218,11 +214,8 @@ def expand_dim(idx, dims):
 
 
 def get_fairseq_enc_params(fairseq_layer):
-    initial_weights = []
-    initial_biases = []
-
-    initial_weights.append(fairseq_layer.self_attn.q_proj.weight.detach().clone())
-    initial_biases.append(fairseq_layer.self_attn.q_proj.bias.detach().clone())
+    initial_weights = [fairseq_layer.self_attn.q_proj.weight.detach().clone()]
+    initial_biases = [fairseq_layer.self_attn.q_proj.bias.detach().clone()]
     initial_weights.append(fairseq_layer.self_attn.k_proj.weight.detach().clone())
     initial_biases.append(fairseq_layer.self_attn.k_proj.bias.detach().clone())
     initial_weights.append(fairseq_layer.self_attn.v_proj.weight.detach().clone())
@@ -242,11 +235,8 @@ def get_fairseq_enc_params(fairseq_layer):
 
 
 def get_fairseq_dec_params(fairseq_layer):
-    initial_weights = []
-    initial_biases = []
-
-    initial_weights.append(fairseq_layer.self_attn.q_proj.weight.detach().clone())
-    initial_biases.append(fairseq_layer.self_attn.q_proj.bias.detach().clone())
+    initial_weights = [fairseq_layer.self_attn.q_proj.weight.detach().clone()]
+    initial_biases = [fairseq_layer.self_attn.q_proj.bias.detach().clone()]
     initial_weights.append(fairseq_layer.self_attn.k_proj.weight.detach().clone())
     initial_biases.append(fairseq_layer.self_attn.k_proj.bias.detach().clone())
     initial_weights.append(fairseq_layer.self_attn.v_proj.weight.detach().clone())

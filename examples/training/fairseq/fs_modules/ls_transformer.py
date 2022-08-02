@@ -156,8 +156,7 @@ class LSTransformerModel(FairseqEncoderDecoderModel):
             fp16=args.fp16,
             local_rank=args.device_id,
         )
-        emb = LSTransformerEmbeddingLayer(config)
-        return emb
+        return LSTransformerEmbeddingLayer(config)
 
     @classmethod
     def build_encoder(cls, args, src_dict, embed_tokens):
@@ -169,8 +168,7 @@ class LSTransformerModel(FairseqEncoderDecoderModel):
 
     def forward(self, src_tokens, prev_output_tokens, **kwargs):
         encoder_out = self.encoder(src_tokens)
-        decoder_out = self.decoder(prev_output_tokens, encoder_out)
-        return decoder_out
+        return self.decoder(prev_output_tokens, encoder_out)
 
 
 class LSTransformerEncoder(FairseqEncoder):
@@ -206,8 +204,7 @@ class LSTransformerEncoder(FairseqEncoder):
         return LSTransformerEncoderLayer(config)
 
     def forward_embedding(self, src_tokens):
-        x = self.embed_tokens(src_tokens)
-        return x
+        return self.embed_tokens(src_tokens)
 
     def forward(self, src_tokens, **kwargs):
         x = self.forward_embedding(src_tokens)

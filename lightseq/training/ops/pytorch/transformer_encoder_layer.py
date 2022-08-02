@@ -16,7 +16,7 @@ from lightseq.training.ops.pytorch.util import (
 )
 
 transformer_cuda_module = None
-_all_layer_grads = dict()
+_all_layer_grads = {}
 
 
 class LSTransformerEncoderFunc(Function):
@@ -202,8 +202,7 @@ class LSTransformerEncoderLayer(nn.Module):
             hs,  # ffn_nw
             hs,  # ffn_nb
         ]
-        offsets = calc_offset(sizes)
-        return offsets
+        return calc_offset(sizes)
 
     def _get_weights(self, i):
         return self.para.data.narrow(
@@ -212,8 +211,7 @@ class LSTransformerEncoderLayer(nn.Module):
 
     def calc_bound(self, w):
         fan_in, _ = nn.init._calculate_fan_in_and_fan_out(w)
-        bound = 1.0 / math.sqrt(fan_in)
-        return bound
+        return 1.0 / math.sqrt(fan_in)
 
     def init_transformer_weights(self):
         hs = self.config.hidden_size

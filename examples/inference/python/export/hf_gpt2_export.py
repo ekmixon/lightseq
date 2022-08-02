@@ -136,10 +136,7 @@ def extract_gpt_weights(
     hdf5_file = h5py.File(output_file, "r")
 
     def _print_pair(key, value):
-        if key == "sampling_method":
-            value = "".join(map(chr, value[()]))
-        else:
-            value = value[()]
+        value = "".join(map(chr, value[()])) if key == "sampling_method" else value[()]
         print(f"{key}: {value}")
 
     list(map(lambda x: _print_pair(*x), hdf5_file["model_conf"].items()))

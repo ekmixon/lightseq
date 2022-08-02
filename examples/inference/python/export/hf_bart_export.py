@@ -173,7 +173,7 @@ def save_bart_proto_to_hdf5(transformer: Transformer, f: h5py.File):
         "model_conf": MODEL_CONF_KEYS,
     }
 
-    print(f"start converting protobuf to hdf5 format.")
+    print("start converting protobuf to hdf5 format.")
     # load src_embedding, trg_embedding, model_conf
     for base_attr, keys in base_attr_to_keys.items():
         for key in keys:
@@ -187,9 +187,7 @@ def save_bart_proto_to_hdf5(transformer: Transformer, f: h5py.File):
             print(f"loading transformer {proto_attr} -> {hdf5_key}")
             _data = attrgetter(proto_attr)(transformer)
             if type(_data) is str:
-                print(
-                    f"find type str, explicitly convert string to ascii encoded array."
-                )
+                print("find type str, explicitly convert string to ascii encoded array.")
                 # explict convert to array of char (int8) to avoid issues on string reading in C
                 _data = np.array([ord(c) for c in _data]).astype(np.int8)
             f.create_dataset(hdf5_key, data=_data)
@@ -214,7 +212,7 @@ def save_bart_proto_to_hdf5(transformer: Transformer, f: h5py.File):
             print(f"loading transformer.decoder_stack {proto_attr} -> {hdf5_key}")
             f.create_dataset(hdf5_key, data=attrgetter(proto_attr)(layer))
 
-    print(f"proto to hdf5 conversion completed.")
+    print("proto to hdf5 conversion completed.")
 
 
 def extract_transformer_weights(

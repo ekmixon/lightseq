@@ -246,5 +246,5 @@ if __name__ == "__main__":
     print("\n".join(predict_text))
     print(">>>>> lightseq (infer) predict text")
     print("\n".join(ls_predict_text))
-    print("lightseq (train) predict time: {}ms".format(ls_train_time * 1000))
-    print("lightseq (infer) predict time: {}ms".format(ls_time * 1000))
+    print(f"lightseq (train) predict time: {ls_train_time * 1000}ms")
+    print(f"lightseq (infer) predict time: {ls_time * 1000}ms")

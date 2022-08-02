@@ -13,10 +13,7 @@ class LSFSTransformerDecoderLayer(LSTransformerDecoderLayer):
 
     def get_self_attn_cache(self, incremental_state):
         res = self.get_incremental_state(incremental_state, "cache")
-        if res is not None:
-            return res
-        else:
-            return {}
+        return res if res is not None else {}
 
     def set_self_attn_cache(self, incremental_state, cache):
         self.set_incremental_state(incremental_state, "cache", cache)
